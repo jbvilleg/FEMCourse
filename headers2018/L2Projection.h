@@ -11,7 +11,6 @@
 #include "MathStatement.h"
 #include "DataTypes.h"
 #include  "IntPointData.h"
-#include <functional>
 
 class L2Projection : public MathStatement
 {

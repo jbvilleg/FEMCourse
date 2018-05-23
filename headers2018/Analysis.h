@@ -8,16 +8,14 @@
 #ifndef Analysis_h
 #define Analysis_h
 
+#include "CompMesh.h"
 #include "DataTypes.h"
-class CompMesh;
-class PostProcess;
-#include <string>
-
+#include "PostProcess.h"
+#include "Assemble.h"
 
 class Analysis
 {
 protected:
-    
     CompMesh *cmesh;
     
     Matrix Solution;
@@ -27,7 +25,6 @@ protected:
     Matrix RightHandSide;
     
 public:
-    
     Analysis();
     
     Analysis(const Analysis &cp);
@@ -42,8 +39,9 @@ public:
     
     void RunSimulation();
     
-    void PostProcess(std::string &filename, PostProcess &defPostProc) const;
+    void PostProcess(std::string &filename, class PostProcess &defPostProc) const;
     
 };
 
 #endif /* Analysis_h */
+

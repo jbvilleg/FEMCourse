@@ -8,10 +8,8 @@
 #ifndef VTKGeoMesh_h
 #define VTKGeoMesh_h
 
+#include "GeoMesh.h"
 #include <string>
-
-class GeoMesh;
-class CompMesh;
 
 class VTKGeoMesh
 {
@@ -19,8 +17,6 @@ class VTKGeoMesh
     /** @brief Generate an output of all geomesh to VTK */
     static void PrintGMeshVTK(GeoMesh *gmesh, const std::string &filename);
 
-    /// Generate an output file for the solution and its gradient
-    static void PrintCMeshVTK(CompMesh *cmesh, int dim, const std::string &filename);
 };
 
 #endif /* VTKGeoMesh_h */
