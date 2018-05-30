@@ -20,7 +20,7 @@
 static void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line);
 
 /// reads the mesh contained in the file and fill the geometric mesh
-void ReadGmsh::Read(GeoMesh &gmesh, const std::string &filename)
+void ReadGmsh::Read(GeoMesh &gmesh, const std::string &file_name)
 {
     
     std::string string_temp;
@@ -30,7 +30,7 @@ void ReadGmsh::Read(GeoMesh &gmesh, const std::string &filename)
     {
         
         // reading a general mesh information by filter
-        std::ifstream read (filename);
+        std::ifstream read (file_name);
         
         while(read)
         {
@@ -147,6 +147,8 @@ void ReadGmsh::Read(GeoMesh &gmesh, const std::string &filename)
     
     std::cout << "Read General Mesh Data -> done!" << std::endl;
     gmesh.BuildConnectivity();
+    
+    
     std::cout << "Geometric Mesh Connectivity -> done!" << std::endl;
 
     
@@ -192,6 +194,7 @@ void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line){
         DebugStop();
     }
     int matid = physical_id;
+
     
     switch (type_id) {
         case 1:
@@ -202,7 +205,7 @@ void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line){
             element_id--;
             TopolLine[0]--;
             TopolLine[1]--;
-            GeoElement *gel = new GeoElementTemplate< Geom1d> (TopolLine, matid, &gmesh);
+            GeoElement *gel = new GeoElementTemplate< Geom1d> (TopolLine, matid, &gmesh,elindex);
             gmesh.SetElement(element_id, gel);
             
         }
@@ -217,7 +220,7 @@ void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line){
             TopolTriangle[0]--;
             TopolTriangle[1]--;
             TopolTriangle[2]--;
-            GeoElement *gel = new GeoElementTemplate< GeomTriangle> (TopolTriangle, matid, &gmesh);
+            GeoElement *gel = new GeoElementTemplate< GeomTriangle> (TopolTriangle, matid, &gmesh,elindex);
             gmesh.SetElement(element_id, gel);
 
         }
@@ -234,26 +237,25 @@ void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line){
             TopolQuad[1]--;
             TopolQuad[2]--;
             TopolQuad[3]--;
-            GeoElement *gel = new GeoElementTemplate< GeomQuad> (TopolQuad, matid, &gmesh);
+            GeoElement *gel = new GeoElementTemplate< GeomQuad> (TopolQuad, matid, &gmesh,elindex);
             gmesh.SetElement(element_id, gel);
 
         }
             break;
         case 4:
         {
-            //DESCOMENTAR
-//            // Tetrahedron
-//            line >> TopolTet[0]; //node 1
-//            line >> TopolTet[1]; //node 2
-//            line >> TopolTet[2]; //node 3
-//            line >> TopolTet[3]; //node 4
-//            element_id--;
-//            TopolTet[0]--;
-//            TopolTet[1]--;
-//            TopolTet[2]--;
-//            TopolTet[3]--;
-//            GeoElement * gel = new GeoElementTemplate< GeomTetrahedron> (TopolTet, matid, &gmesh);
-//            gmesh.SetElement(element_id, gel);
+            // Tetrahedron
+            line >> TopolTet[0]; //node 1
+            line >> TopolTet[1]; //node 2
+            line >> TopolTet[2]; //node 3
+            line >> TopolTet[3]; //node 4
+            element_id--;
+            TopolTet[0]--;
+            TopolTet[1]--;
+            TopolTet[2]--;
+            TopolTet[3]--;
+            GeoElement * gel = new GeoElementTemplate< GeomTetrahedron> (TopolTet, matid, &gmesh,elindex);
+            gmesh.SetElement(element_id, gel);
 
         }
             break;
@@ -508,3 +510,4 @@ void InsertElement(GeoMesh &gmesh, int elindex, std::ifstream & line){
             break;
     }
 }
+

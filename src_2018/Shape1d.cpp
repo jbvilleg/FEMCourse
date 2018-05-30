@@ -56,17 +56,16 @@ void Shape1d::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matrix 
 }
 
 /// returns the number of shape functions associated with a side
-int Shape1d::NShapeFunctions(int side, VecInt &orders){
- 
-    if (side<=1) {
-        //En los nodos del elemento tiene asociada una sola funcion
-        return 1;
-    }else{
-        
-        //En el elemento lineal tiene asociadas varias funciones;
-        return orders[side];
-    }
+
+int Shape1d::NShapeFunctions(int side, int orders){
     
+    if (side<2) {
+        return 1;
+    }
+    else{
+        return orders-1;
+    }
+
 }
 
 /// returns the total number of shape functions
@@ -74,8 +73,8 @@ int Shape1d::NShapeFunctions(VecInt &orders){
     int nSides = orders.size();
     int nshape=0;
     for(int i=0;i<=nSides-1;i++){
-    //    nshape = nshape + NShapeFunctions(i,orders);
-        nshape = nshape + orders[i];
+        nshape = nshape + NShapeFunctions(i,orders[i]);
     }
     return nshape;
+    
 }

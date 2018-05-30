@@ -166,7 +166,7 @@ void CompElement::CalcStiff(Matrix &ek, Matrix &ef) const{
         this->ComputeRequiredData(data, intPoint);
         //devuelve el punto de integracion y el peso
         weight *=fabs(data.detjac);
-        material->Contribute(data, weight, ek, ef);
+//        material->Contribute(data, weight, ek, ef);
         
     }
 

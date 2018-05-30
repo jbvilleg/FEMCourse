@@ -5,9 +5,9 @@
 //  Created by Philippe Devloo on 03/04/18.
 //
 
-
 #include "IntRule.h"
 #include "IntRule1d.h"
+
 //INT RULE ES UNA CLASE VIRTUAL
 //Default Constructor of integration rule
 IntRule::IntRule(){
@@ -62,13 +62,9 @@ void IntRule::Point(int p, VecDouble &co, double &weight) const {
     
 }
 
-
-
-
-
 //Fuction for printing results
 void IntRule::Print(std::ostream &out) const{
-    std::cout<<"Orden Polinomial : "<<fOrder<<"\n";
-    std::cout<<"Numero de Puntos de Integración: "<<NPoints()<<"\n";
+    out<<"Orden Polinomial : "<<fOrder<<"\n";
+    out<<"Numero de Puntos de Integración: "<<NPoints()<<"\n";
 
 }

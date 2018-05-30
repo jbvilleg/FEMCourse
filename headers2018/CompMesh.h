@@ -12,6 +12,7 @@
 #include "DataTypes.h"
 
 class CompElement;
+class GeoMesh;
 
 class MathStatement;
 

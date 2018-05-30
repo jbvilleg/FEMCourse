@@ -130,23 +130,23 @@
 }
 
 /// returns the number of shape functions associated with a side
- int ShapeTriangle::NShapeFunctions(int side, VecInt &orders){
-     if (side<=2){
+ int ShapeTriangle::NShapeFunctions(int side, int orders){
+     if (side<3) {
          return 1;
      }
      else{
-         return orders[side];
+         return orders-1;
      }
+     
 }
 
 /// returns the total number of shape functions
  int ShapeTriangle::NShapeFunctions(VecInt &orders){
+     
      int nSides = orders.size();
      int nshape=0;
      for(int i=0; i<= nSides-1;i++){
-         //    nshape = nshape + NShapeFunctions(i,orders);
-         nshape = nshape + orders[i];
-         
+        nshape = nshape + NShapeFunctions(i,orders[i]);
      }
      return nshape;
 }

@@ -12,7 +12,6 @@
 void ShapeQuad::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matrix &dphi){
     
     int nshape = NShapeFunctions(orders);
-    //int nsides = orders.size();
     
     VecDouble coxi(1);
     coxi[0]=xi[0];
@@ -29,14 +28,26 @@ void ShapeQuad::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matri
         phi.resize(4);
         dphi.Resize(2, 4);
         Indices.Resize(2,2);
-        Indices(0,0)=0,Indices(0,1)=3,Indices(1,0)=1,Indices(1,1)=2;
+        Indices(0,0)=0;
+        Indices(0,1)=3;
+        Indices(1,0)=1;
+        Indices(1,1)=2;
         
     }else if(nshape==9){
         phi.resize(9);
         dphi.Resize(2, 9);
         Indices.Resize(3,3);
-        Indices(0,0)=0,Indices(0,1)=7,Indices(0,2)=3,Indices(1,0)=4,Indices(1,1)=8,Indices(1,2)=6,Indices(2,0)=1,Indices(2,1)=5,Indices(2,2)=2;
-    }else{
+        Indices(0,0)=0;
+        Indices(0,1)=7;
+        Indices(0,2)=3;
+        Indices(1,0)=4;
+        Indices(1,1)=8;
+        Indices(1,2)=6;
+        Indices(2,0)=1;
+        Indices(2,1)=5;
+        Indices(2,2)=2;
+    }
+    else{
         DebugStop();
     }
     
@@ -58,20 +69,14 @@ void ShapeQuad::Shape(const VecDouble &xi, VecInt &orders, VecDouble &phi, Matri
     
 }
     
-    
-
-
-
 /// returns the number of shape functions associated with a side
-int  ShapeQuad::NShapeFunctions(int side, VecInt &orders){
+int  ShapeQuad::NShapeFunctions(int side, int orders){
     
-    if (side<=4) {
-        //En los nodos del elemento tiene asociada una sola funcion
+    if (side<4){
         return 1;
-    }else{
-        
-        //En el elemento lineal tiene asociadas varias funciones;
-        return orders[side];
+    }
+    else{
+        return orders-1;
     }
     
 }
@@ -81,8 +86,10 @@ int  ShapeQuad::NShapeFunctions(VecInt &orders){
     int nSides = orders.size();
     int nshape=0;
     for(int i=0;i<=nSides-1;i++){
-        //    nshape = nshape + NShapeFunctions(i,orders);
-        nshape = nshape + orders[i];    }
+        nshape = nshape + NShapeFunctions(i,orders[i]);
+       
+        
+    }
     return nshape;
     
 }

@@ -14,7 +14,9 @@
 /// Constructor
 GeomQuad::GeomQuad(){
     fNodeIndices.resize(nCorners);
-    
+    for(int i=0; i<nCorners; i++){
+        fNodeIndices[i]=-1;
+    }
 }
 
 /// destructor
@@ -38,7 +40,7 @@ GeomQuad &GeomQuad::operator=(const GeomQuad &copy){
     for(int i =0; i<=nSides; i++){
         fNeighbours[i]=copy.fNeighbours[i];
     }
-
+    return *this;
 }
 
 /// Computes the shape functions associated with the geometric map
@@ -64,32 +66,41 @@ void GeomQuad::Shape(const VecDouble &xi, VecDouble &phi, Matrix &dphi){
 
 /// Computes the value of x for a given point in parameter space as a function of corner coordinates
 void GeomQuad::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x){
+    
     VecDouble phi(4);
     Matrix dphi(2,4);
     x.resize(3);
     Shape(xi, phi, dphi);
     
-    for(int i =0; i<=phi.size(); i++){
-        x[0] += phi[i]*NodeCo(0,0); //verificar la matriz;
-        x[1] += phi[i]*NodeCo(0,1); //verificar la matriz;
-        x[2] += 0;
+    int nSpace = NodeCo.Rows();
+    for(int i = 0; i < nSpace; i++) {
+        x[i] = 0.0;
+        for(int j = 0; j < 4; j++) {
+            x[i] += phi[j]*NodeCo.GetVal(i,j);
+        }
     }
- 
+    
+//    for(int i =0; i<=phi.size(); i++){
+//        x[0] += phi[i]*NodeCo.GetVal(0,0); //verificar la matriz;
+//        x[1] += phi[i]*NodeCo.GetVal(0,1); //verificar la matriz;
+//        x[2] += 0;
+//    }
+
 }
 
 /// Computes the value of x and gradx for a given point in parameter space
 void GeomQuad::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx){
     
-    VecDouble phi(4);
-    Matrix dphi(2,3);
-    x.resize(3);
+    VecDouble phi(4,0.0);
+    Matrix dphi(2,4,0.0);
+  
     Shape(xi, phi, dphi);
-    X(xi,NodeCo,x);
+   
     
     for(int i=0; i<= 3; i++){
-        for(int j=0; j<NodeCo.Rows();j++){
-            gradx(i,0)+= NodeCo(j,i)*dphi(0,i);
-            gradx(i,1)+= NodeCo(j,i)*dphi(1,i);
+        for(int j=0; j<Dimension;j++){
+            gradx(j,0)+= NodeCo(j,i)*dphi(0,i);
+            gradx(j,1)+= NodeCo(j,i)*dphi(1,i);
         }
     }
     
@@ -98,9 +109,6 @@ void GeomQuad::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &
 
 /// return the number of nodes of the template
 int GeomQuad::NumNodes(){
-    //revisar!
-    //como determinar el numero de nodos¿?
-    //usar topology?
     
     return nCorners;
 }
@@ -126,6 +134,6 @@ GeoElementSide GeomQuad::Neighbour(int side){
 }
 
 /// Initialize the neighbour data structure
-void GeomQuad::SetNeighbour(int side, GeoElementSide &neighbour){
+void GeomQuad::SetNeighbour(int side, const GeoElementSide &neighbour){
     fNeighbours[side] = neighbour;
 }

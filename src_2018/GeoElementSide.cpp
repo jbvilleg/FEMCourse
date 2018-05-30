@@ -12,7 +12,8 @@
 
 
 GeoElementSide::GeoElementSide(){
-//    fSide = -1;
+    fSide = 0;
+    fElement = 0;
 }
 
 
@@ -35,8 +36,27 @@ GeoElementSide GeoElementSide::Neighbour() const{
 }
 
 
-/** @brief Fill in the data structure for the neighbouring information*/
-void GeoElementSide::SetNeighbour( GeoElementSide &neighbour){
-    fElement->SetNeighbour(fSide,neighbour);
-     
+// Fill in the data structure for the neighbouring information
+void SetNeighbour(const GeoElementSide &neighbour){
+    
+}
+
+// Verifiy if an element is a neighbour
+bool IsNeighbour(const GeoElementSide &candidate){
+    
+}
+
+// Define elements neighbourhood
+void IsertConnectivity(GeoElementSide &connectivity){
+    
+}
+
+// Vector with all Neighbours
+void AllNeighbours(std::vector<GeoElementSide> &allneigh){
+    
+}
+
+// Compute all corner neighbours
+void ComputeNeighbours(std::vector<GeoElementSide> &neighbour){
+    
 }

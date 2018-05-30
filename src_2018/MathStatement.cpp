@@ -7,7 +7,6 @@
 
 #include "MathStatement.h"
 
-
 MathStatement::MathStatement(){
     
 }

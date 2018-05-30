@@ -29,7 +29,7 @@ Poisson &Poisson::operator=(const Poisson &copy){
 }
 
 Poisson *Poisson::Clone() const{
-    // return new MathStatement(*this);
+   
 }
 
 Poisson::~Poisson(){
@@ -51,34 +51,15 @@ int Poisson::NState() const{
 
 // Method to implement integral over element's volume
 void Poisson::Contribute(IntPointData &data, double weight , Matrix &EK, Matrix &EF) const{
-   
-    VecDouble &phi=data.phi;
-    Matrix &dphi=data.dphidx;
-    VecDouble &x = data.x;
-    Matrix &axes =data.axes;
+    weight = data.weight;
     
-    int nphi= phi.size();
-    int nphij=phi.size();
-    VecDouble f(nphi,0.);
-    forceFunction(x,f);
-    Matrix perm = GetPermeability();
-    Matrix Kdphi(2,2,0.);
-    
-    
-    for (int i = 0; i<nphi; i++) {
-        EF(i,0)+= -weight*f[i]*phi[i];
-        for(int j = 0; j<nphi; j++){
-            //revisar esto! k¿?
-            for (int k=0; k<nphi; k++) {
-                EK(i,j) += weight*(dphi(k,i)*dphi(k,j));
-            }
-            
-        }
-    }
     
     
 }
 
+void Poisson::ContributeError(IntPointData &integrationpointdata, std::function<void (const VecDouble &, VecDouble &, Matrix &)> &exact){
+    
+}
 // Prepare and print post processing data
 VecDouble Poisson::PostProcess(const IntPointData &integrationpointdata, const PostProcVar var) const{
 

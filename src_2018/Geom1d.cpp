@@ -13,8 +13,9 @@
 /// Constructor
 Geom1d::Geom1d(){
     fNodeIndices.resize(2);
-    fNodeIndices[0]=0;
-    fNodeIndices[1]=1;
+    //Indice Global de los nodos
+    fNodeIndices[0]=-1;
+    fNodeIndices[1]=-1;
 }
 
 /// destructor
@@ -24,18 +25,21 @@ Geom1d::~Geom1d(){
 
 /// copy constructor
 Geom1d::Geom1d(const Geom1d &copy){
-    fNodeIndices=copy.fNodeIndices;
+    
     fNeighbours[0] =copy.fNeighbours[0];
     fNeighbours[1] =copy.fNeighbours[1];
     fNeighbours[2] =copy.fNeighbours[2];
+    fNodeIndices = copy.fNodeIndices;
 }
 
 /// operator=
 Geom1d &Geom1d::operator=(const Geom1d &copy){
+    
     fNodeIndices=copy.fNodeIndices;
     fNeighbours[0] =copy.fNeighbours[0];
     fNeighbours[1] =copy.fNeighbours[1];
     fNeighbours[2] =copy.fNeighbours[2];
+    
 }
 
 /// Computes the shape functions associated with the geometric map
@@ -60,21 +64,31 @@ Geom1d &Geom1d::operator=(const Geom1d &copy){
  void Geom1d::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx){
      
      //gradX linear
-     double phi1 = (1- xi[0])/2;
-     double phi2 = (1+ xi[0])/2;
+     int nrow = Dimension;
+     int ncol = NodeCo.Cols();
      
-     double dphi1 = -0.5;
-     double dphi2 = 0.5;
-     double map = NodeCo(0,0)*phi1 + NodeCo(1,0)*phi2;
-     double dmap = NodeCo(0,0)*dphi1 + NodeCo(1,0)*dphi2;     
-     x[0]= map;
-     gradx(0,0)=dmap;
+     gradx.Resize(nrow,1);
+     gradx.Zero();
+     
+     VecDouble phi(2,1);
+     Matrix dphi(2,2);
+     X(xi,NodeCo,x);
+     //funciones de forma
+     Shape(xi,phi,dphi);
+     for(int i = 0; i < ncol; i++)
+     {
+         for(int j = 0; j < nrow; j++)
+         {
+             gradx(j,0) += NodeCo(j,i)*dphi(0,i);
+             
+         }
+     }
+
 }
 
 /// return the number of nodes of the template
 int Geom1d::NumNodes(){
-    //retornar el numero de puntos
-    //REVISAR
+ 
     return nCorners;
 }
 
@@ -100,7 +114,7 @@ GeoElementSide Geom1d::Neighbour(int side){
 }
 
 /// Initialize the neighbour data structure
-void Geom1d::SetNeighbour(int side, GeoElementSide &neighbour){
+void Geom1d::SetNeighbour(int side, const GeoElementSide &neighbour){
     fNeighbours[side]= neighbour;
 }
 

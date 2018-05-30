@@ -11,6 +11,7 @@
 #include "MathStatement.h"
 #include "DataTypes.h"
 #include  "IntPointData.h"
+#include <functional>
 
 class Poisson : public MathStatement
 {
@@ -65,6 +66,10 @@ public:
     
     // Method to implement integral over element's volume
     virtual void Contribute(IntPointData &integrationpointdata, double weight , Matrix &EK, Matrix &EF) const;
+    
+    // Method to compute the contribution to the error norm
+    virtual void ContributeError(IntPointData &integrationpointdata, std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact);
+    
     
     // Prepare and print post processing data
     virtual std::vector<double> PostProcess(const IntPointData &integrationpointdata, const PostProcVar var) const;

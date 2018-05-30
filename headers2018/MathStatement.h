@@ -40,8 +40,10 @@ public:
     virtual int NState() const = 0;
     
     // Method to implement integral over element's volume
-    virtual void Contribute(IntPointData &integrationpointdata, double weight, Matrix &EK, Matrix &EF) const = 0;
+    virtual void Contribute(IntPointData &integrationpointdata, Matrix &EK, Matrix &EF) const = 0;
     
+    // Method to compute the contribution to the error norm
+    virtual void ContributeError(IntPointData &integrationpointdata, std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact)=0;
     
 };
 #endif /* MathStatement_h */

@@ -96,4 +96,4 @@ int CompElementTemplate<Shape>::Dimension() const {
 template class CompElementTemplate<Shape1d>;
 template class CompElementTemplate<ShapeQuad>;
 template class CompElementTemplate<ShapeTriangle>;
-//template class CompElementTemplate<ShapeTetrahedron>;
+template class CompElementTemplate<ShapeTetrahedron>;
