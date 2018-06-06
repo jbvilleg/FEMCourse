@@ -62,6 +62,10 @@ public:
     // Set the number of degrees of freedom
     void SetNumberDOF(int64_t ndof);
     
+    int64_t GetNumberDOF() const {
+        return dofs.size();
+    }
+    
     // Set the number of math statements
     void SetNumberMath(int nmath);
     

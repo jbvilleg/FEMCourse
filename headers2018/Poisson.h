@@ -29,6 +29,9 @@ public:
     Poisson();
     
     // Constructor of Poisson
+    Poisson(int materialid, Matrix &perm);
+    
+    // Constructor of Poisson
     Poisson(Matrix &perm);
     
     // Copy constructor of Poisson
@@ -65,7 +68,7 @@ public:
     virtual int NState() const;
     
     // Method to implement integral over element's volume
-    virtual void Contribute(IntPointData &integrationpointdata, double weight , Matrix &EK, Matrix &EF) const;
+    virtual void Contribute(IntPointData &integrationpointdata,double weight, Matrix &EK, Matrix &EF) const;
     
     // Method to compute the contribution to the error norm
     virtual void ContributeError(IntPointData &integrationpointdata, std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact);

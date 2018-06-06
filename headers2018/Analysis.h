@@ -9,6 +9,7 @@
 #define Analysis_h
 
 #include "DataTypes.h"
+#include "PostProcess.h"
 class CompMesh;
 class PostProcess;
 #include <string>
@@ -42,7 +43,7 @@ public:
     
     void RunSimulation();
     
-    void PostProcess(std::string &filename, PostProcess &defPostProc) const;
+    void PostProcessSolution(const std::string &filename, PostProcess &defPostProc) const;
     
 };
 

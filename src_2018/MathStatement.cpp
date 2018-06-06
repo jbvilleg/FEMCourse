@@ -22,6 +22,7 @@ MathStatement &MathStatement::operator=(const MathStatement &copy){
     return *this;
 }
 
+
 MathStatement::~MathStatement(){
     
 }

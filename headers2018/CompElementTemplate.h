@@ -62,7 +62,7 @@ public:
     
     // Return the number of degree of freedom
     virtual int NDOF() const;
-    
+    void GetMultiplyingCoeficients(VecDouble &coefs) const;
     // Return the number of shape functions stored in the DOF data structure
     virtual int NShapeFunctions(int doflocindex) const;
     

@@ -21,6 +21,7 @@
 #include "ShapeQuad.h"
 #include "ShapeTriangle.h"
 #include "DataTypes.h"
+#include "MathStatement.h"
 
 
 // Default constructor of CompMesh
@@ -135,27 +136,94 @@ void CompMesh::SetMathVec(const std::vector<MathStatement *> &mathvec){
 
 // will create the computational elements
 void CompMesh::AutoBuild(){
+
     int NumEl = geomesh->NumElements();
+    this->compelements.resize(NumEl);
+   
+    SetNumberElement(NumEl);
+    //SetNumberMath(NumEl);
+    //Create computational elements
     for(int iel=0; iel <NumEl; iel++)
     {
     GeoElement *gel = GetGeoMesh()->Element(iel);
     CompElement *cel = gel->CreateCompEl(this, iel);
+        cel->SetNDOF(gel->NSides());
         SetNumberElement(iel+1);
+        int numDofEl = gel->NSides();
+        //Inicializa los grados de libertad OJO REVISAR
+        for(int i=0; i<numDofEl;i++){
+            cel->SetDOFIndex(i, -1);
+        }
         SetElement(iel, cel);
+        gel->SetReference(cel);
     }
-    std::cout<<"Luego de autobuild debe de setarse el vectr de statements";
+    
+    //DOF
+    for(int iel=0; iel<NumEl; iel++){
+        GeoElement *gel = GetGeoMesh()->Element(iel);
+        int nsidesAn = gel->NSides();
+        
+        
+        for(int side=0; side<nsidesAn; side++){
+            
+            int dofAn = gel->GetReference()->GetDOFIndex(side);
+            if(dofAn == -1){
+               
+                int ndof = this->GetNumberDOF();
+                this->SetNumberDOF(ndof+1);
+                DOF dof;
+                int order = this->GetDefaultOrder();
+                int nshape = gel->GetReference()->ComputeNShapeFunctions(side, order);
+                //importante
+                if(nshape<0){
+                    nshape=0;
+                }
+                //revisar iel o index do vecino?
+               MathStatement *mat = this->GetMath(iel);
+               int nstate = mat->NState();
+                dof.SetNShapeStateOrder(nshape,nstate,order);
+                
+                
+                this->SetDOF(ndof, dof);
+                GeoElementSide elementAn(gel,side);
+                GeoElementSide neigh = gel->Neighbour(side);
+                
+                 elementAn.Element()->GetReference()->SetDOFIndex(side, ndof);
+                while(elementAn != neigh){
+                    int sideNeig = neigh.Side();
+                    neigh.Element()->GetReference()->SetDOFIndex(sideNeig, ndof);
+                    neigh = neigh.Neighbour();
+                }
+            }
+        }
+       
+    }
+   
+
+    this->Resequence();
+        std::cout<<"AutoBuild -> done!";
     
   
 }
 
 // Initialize the datastructure FirstEquation of the DOF objects
 void CompMesh::Resequence(){
-    std::cout<<"implementar Resequence en compmesh";
-    DebugStop();
+    int64_t ndof = GetNumberDOF();
+    int64_t firstEqu = 0;
+    int doft=0;
+    
+    for (int idof=0; idof<ndof; idof++) {
+        this->GetDOF(idof).SetFirstEquation(firstEqu);
+
+         doft = this->GetDOF(idof).GetNShape()*this->GetDOF(idof).GetNState();
+        
+        firstEqu += doft;
+    }
 }
 
 // Initialize the datastructure FirstEquation of the DOF objects in the order specified by the vector
 void CompMesh::Resequence(VecInt &DOFindices){
+    
     std::cout<<"implementar Resequence en compmesh";
     DebugStop();
 }

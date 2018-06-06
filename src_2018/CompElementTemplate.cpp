@@ -1,97 +1,128 @@
+//
+//  CompElementTemplate.h
+//  FemCourse
+//
+//  Created by Philippe Devloo on 24/04/18.
+//
 
-#include "CompElement.h"
 #include "CompElementTemplate.h"
+#include "CompElement.h"
+#include "GeoElementTemplate.h"
+#include "GeoElement.h"
+#include "Shape1d.h"
+#include "ShapeQuad.h"
+#include "ShapeTetrahedron.h"
+#include "ShapeTriangle.h"
 #include "CompMesh.h"
+#include "tpanic.h"
+#include "DataTypes.h"
+#include "MathStatement.h"
+#include "DOF.h"
 
-// Default constructor of CompElementTemplate
+
 template<class Shape>
-CompElementTemplate<Shape>::CompElementTemplate():CompElement(){
-    std::cout<<"bingo";
-    
-    
-    
+CompElementTemplate<Shape>::CompElementTemplate() : CompElement(){
+    dofindexes.resize(0);
+    intrule=0;
 }
 
 template<class Shape>
 CompElementTemplate<Shape>::CompElementTemplate(int64_t ind, CompMesh *cmesh,  GeoElement *geo) : CompElement(ind,cmesh,geo){
     
-    //numero de elementos en la malla computacional
-    int Nelem = cmesh->GetElementVec().size();
-    cmesh->SetNumberElement(Nelem+1);
-    //recordar que inicia la numeracion en 0
-    cmesh->SetElement(Nelem, this);
-    this->SetIndex(ind);
-    intrule.SetOrder(1);
-   
+
+     int order = cmesh->GetDefaultOrder();
+     intrule.SetOrder(order*2);
+     SetIntRule(&intrule);
+
 }
 
-// Copy constructor of CompElementTemplate
 template<class Shape>
-CompElementTemplate<Shape>::CompElementTemplate(const CompElementTemplate &){
-    
+CompElementTemplate<Shape>::CompElementTemplate(const CompElementTemplate &copy) : CompElement(copy){
+    dofindexes=copy.dofindexes;
+    intrule=copy.intrule;
 }
 
-// Operator of copy
 template<class Shape>
-CompElementTemplate<Shape> &CompElementTemplate<Shape>::operator=(const CompElementTemplate &){
-    
-    
+CompElementTemplate<Shape> &CompElementTemplate<Shape>::operator=(const CompElementTemplate &copy){
+    dofindexes=copy.dofindexes;
+    intrule=copy.intrule;
+    return *this;
 }
 
-// Destructor of CompElementTemplate
 template<class Shape>
 CompElementTemplate<Shape>::~CompElementTemplate(){
     
 }
 
-// Method for creating a copy of the element
+template<class Shape>
+void CompElementTemplate<Shape>::SetNDOF(int64_t ndof){
+    dofindexes.resize(ndof);
+}
+
+template<class Shape>
+void CompElementTemplate<Shape>::SetDOFIndex(int i, int64_t dofindex){
+    dofindexes[i]=dofindex;
+}
+
+template<class Shape>
+int64_t CompElementTemplate<Shape>::GetDOFIndex(int i){
+    return dofindexes[i];
+}
+
 template<class Shape>
 CompElement * CompElementTemplate<Shape>::Clone() const{
     
-    CompElement *cel;
-    return cel;
 }
 
-// Compute shape functions set at point x
 template<class Shape>
-void CompElementTemplate<Shape>::ShapeFunctions(const VecDouble &intpoint, VecDouble &phi, Matrix &dphi) const {
+void  CompElementTemplate<Shape>::ShapeFunctions(const VecDouble &intpoint, VecDouble &phi, Matrix &dphi) const{
+    
+    VecInt orders(NDOF());
+    int ndof = NDOF();
+    CompMesh *cmesh =this->GetCompMesh();
+    for (int ic=0; ic<ndof; ic++) {
+        orders[ic]=cmesh->GetDOF(ic).GetOrder();
+    }
+    Shape::Shape(intpoint, orders, phi, dphi);
     
 }
+template<class Shape>
+void CompElementTemplate<Shape>::GetMultiplyingCoeficients(VecDouble &coefs) const{
 
-// Return the number of shape functions
+}
+
 template<class Shape>
 int CompElementTemplate<Shape>::NShapeFunctions() const{
-    int order = intrule.GetOrder();
-    VecInt orders(1, order);
-    return Shape::NShapeFunctions(orders);
-}
-// Return the number of degree of freedom
-template<class Shape>
-int CompElementTemplate<Shape>::NDOF() const {
-    
-    return -1;
+ 
+    int ndof = NDOF();
+    int nshape = 0;
+    for (int ic=0; ic<ndof; ic++) {
+        nshape +=NShapeFunctions(ic);
+    }
+    return nshape;
 }
 
-// Return the number of shape functions stored in the DOF data structure
 template<class Shape>
-int CompElementTemplate<Shape>::NShapeFunctions(int doflocindex){
-    
-    return -1;
+int CompElementTemplate<Shape>::NDOF() const{
+    return dofindexes.size();
 }
 
-// Use the Shape template class to compute the number of shape functions
+/// returns the number of shape functions stored in the DOF data structure
+template<class Shape>
+int CompElementTemplate<Shape>::NShapeFunctions(int doflocindex) const{
+    CompMesh cmesh = *this->GetCompMesh();
+    DOF dofex = cmesh.GetDOF(doflocindex);
+    return cmesh.GetDOF(doflocindex).GetNShape();
+}
+
+/// uses the Shape template class to compute the number of shape functions
 template<class Shape>
 int CompElementTemplate<Shape>::ComputeNShapeFunctions(int doflocindex, int order){
-    
-    return -1;
+    dofindexes.resize(doflocindex+1);
+    dofindexes[doflocindex]=doflocindex;
+    return Shape::NShapeFunctions(doflocindex,order);
 }
 
-// Return space dimension
-template<class Shape>
-int CompElementTemplate<Shape>::Dimension() const {
-    std::cout<<"revisar Dimension en Shape";
-    return 1;
-}
 
 template class CompElementTemplate<Shape1d>;
 template class CompElementTemplate<ShapeQuad>;
