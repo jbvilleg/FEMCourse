@@ -10,6 +10,7 @@
 
 #include "DataTypes.h"
 #include "IntPointData.h"
+#include "PostProcess.h"
 
 class MathStatement
 {
@@ -19,7 +20,12 @@ class MathStatement
     // Number of state variable
     int nstate = 0;
     
+    // Pointer to Exact solution function, it is necessary to calculating errors
+    std::function<void (const VecDouble &loc, VecDouble &result, Matrix &deriv)> fExact;
+    
 public:
+    
+      static double gBigNumber;
     
     // Constructor of MathStatement
     MathStatement();
@@ -39,15 +45,34 @@ public:
     // Return the number of state variables
     virtual int NState() const = 0;
     
+//    // Return the number of errors
+//    virtual int NEvalErrors() const = 0;
+//    
+    // Method to implement integral over element's volume
+    virtual void Contribute(IntPointData &integrationpointdata, double weight, Matrix &EK, Matrix &EF) const = 0;
+    
+    // Method to implement error over element's volume
+//    virtual void ContributeError(IntPointData &integrationpointdata, VecDouble &u_exact, Matrix &du_exact, VecDouble &errors) const = 0;
+//    
     virtual void SetMatID(int indexmat){
         matid = indexmat;
     }
     
-    // Method to implement integral over element's volume
-    virtual void Contribute(IntPointData &integrationpointdata,double weight, Matrix &EK, Matrix &EF) const = 0;
+    virtual int GetMatID(){
+        return matid;
+    }
     
-    // Method to compute the contribution to the error norm
-    virtual void ContributeError(IntPointData &integrationpointdata, std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact)=0;
+    virtual void SetExact(std::function<void (const VecDouble &loc, VecDouble &result, Matrix &deriv)> Exact){
+        fExact=Exact;
+    }
+    
+    virtual std::function<void (const VecDouble &loc, VecDouble &result, Matrix &deriv)> GetExact() const{
+        return fExact;
+    }
+    
+    // Prepare and print post processing data
+    virtual std::vector<double> PostProcessSolution(const IntPointData &integrationpointdata, const int var) const = 0;
+    
     
 };
 #endif /* MathStatement_h */

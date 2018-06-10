@@ -28,6 +28,8 @@
 #include <functional>
 #include "Analysis.h"
 #include "Assemble.h"
+#include "PostProcessTemplate.h"
+#include "PostProcess.h"
 
 
 void OneElementMatrix();
@@ -37,17 +39,259 @@ void AutoBuildTest();
 //ForceFunction
 void FoFunc(const VecDouble &x, VecDouble &f);
 
-//Test TwoElement Global Matrix
+//Test TwoElement Global Matrix and Analysis
 void TestGlobalMatrix();
+void solexact1(const VecDouble &co, VecDouble &result, Matrix &deriv);
+void solexact2(const VecDouble &co, VecDouble &result, Matrix &deriv);
+void solexact3(const VecDouble &co, VecDouble &result, Matrix &deriv);
+
+GeoMesh *CreateGeoMesh(int nx, int ny, int dim, double lx, double ly);
 int main ()
 {
- //   OneElementMatrix();
+  //  OneElementMatrix();
  //   AutoBuildTest();
-    TestGlobalMatrix();
+  //   TestGlobalMatrix();
+   GeoMesh *gmesh = CreateGeoMesh(2,2,0,12,12);
+   gmesh->BuildConnectivity();
+
+    CompMesh *cmesh = new CompMesh(gmesh);
+    cmesh->SetNumberMath(5);
+     Matrix perm(2, 2, 1.);
+    perm(1,0) = 0.;
+    perm(0,1) = 0.;
+    Poisson * pos = new Poisson(1, perm);
+    pos->SetForceFunction(FoFunc);
+    std::vector<MathStatement *> mathvec(gmesh->NumElements());
+
+
+    Matrix projection(2,2,0.);
+    projection(0,0)=1;
+     projection(1,1)=1;
+    MathStatement * bc0 = new L2Projection(-1, projection);
+    bc0->SetExact(&solexact3);
+    MathStatement * bc1 = new L2Projection(-2, projection);
+     bc1->SetExact(&solexact1);
+    MathStatement * bc2 = new L2Projection(-3, projection);
+     bc2->SetExact(&solexact2);
+    MathStatement * bc3 = new L2Projection(-4, projection);
+     bc3->SetExact(&solexact1);
+    cmesh->SetNumberMath(20);
+
+    for(int iel=0; iel<gmesh->NumElements(); iel++){
+        GeoElement *geoel = gmesh->Element(iel);
+        if(geoel->Material()==1){
+            mathvec[iel]=pos;
+
+        }
+        if(geoel->Material()==-1){
+            mathvec[iel]=bc0;
+            cmesh->SetMathStatement(iel, bc0);
+        }
+        if(geoel->Material()==-2){
+            mathvec[iel]=bc1;
+
+        }
+        if(geoel->Material()==-3){
+          mathvec[iel]=bc2;
+        }
+        if(geoel->Material()==-4){
+            mathvec[iel]=bc3;
+        }
+    }
+
+    cmesh->SetMathVec(mathvec);
+    cmesh->SetDefaultOrder(1);
+    cmesh->AutoBuild();
+    for(int i=0; i<gmesh->NumElements(); i++){
+        cmesh->GetElement(i)->SetStatement(mathvec[i]);
+    }
+   
+    Analysis an(cmesh);
+
+    an.RunSimulation();
+    
+    PostProcess *solpos = new PostProcessTemplate<Poisson>(&an);
+    
+    
+    solpos->AppendVariable("Sol");
+    //  solpos->AppendVariable("DSol");
+    //    solpos->AppendVariable("Sol_exact");
+    //    solpos->AppendVariable("Force");
+    
+    an.PostProcessSolution("SolutionPost.vtk", *solpos);
+
+
+    
+//    VTKGeoMesh::PrintGMeshVTK(gmesh, "TESTVMALLA.vtk");
+//    gmesh->Print(std::cout);
+    std::cout<<"bingo";
+    
     
     return 0;
 };
+void solexact1(const VecDouble &co, VecDouble &result, Matrix &deriv)
+{
+    result[0] = 4;
+    result[1] = 0;
+    result[2] = 0.;
+}
+void solexact2(const VecDouble &co, VecDouble &result, Matrix &deriv)
+{
+    result[0] = 20;
+    result[1] = 0;
+    result[2] = 0.;
+}
+void solexact3(const VecDouble &co, VecDouble &result, Matrix &deriv)
+{
+    result[0] = 30;
+    result[1] = 0;
+    result[2] = 0.;
+}
+void FoFunc(const VecDouble &x, VecDouble &f){
+    f.resize(2);
+    
+    double xP = x[0];
+    double yP = x[1];
+    
+    
+    double fx =  cos(xP);
+    double fy =  yP;
+    
+    f[0] = 0;
+    f[1] = 0;
+}
+GeoMesh *CreateGeoMesh(int nx, int ny, int dim, double lx, double ly){
+   
+    double hx=lx/nx;
+    double hy=ly/ny;
+    int NumNodes =(nx+1)*(ny+1);
+    int NumElements = nx*ny;
+    Matrix pointsNiv(ny+1,nx+1,0);
+    VecInt nodes;
+    Matrix nodeCord(2,NumNodes,0);
+    int npx = nx+1;
+    int npy= ny+1;
+    int n_node;
+    GeoMesh *gmesh = new GeoMesh;
+    gmesh->SetNumNodes(NumNodes);
+    gmesh->SetNumElements(NumElements);
+    VecDouble co(3,0);
+    VecInt Nodes(4,0);
+    //create nodes
+    for(int j=0; j<npy; j++){
+        for(int i=0; i<npx; i++){
+            n_node = i + (j)*npx;
+            nodes.push_back(n_node);
+            pointsNiv(j,i)=n_node;
+            nodeCord(0,i +(j)*npx) = hx * i;
+            nodeCord(1,i +(j)*npx) = hy * j;
+            co[0]=hx * i;
+            co[1]=hy * j;
+            gmesh->Node(n_node).SetCo(co);
+        }
+    }
+    //create GeoElements elements
+    int index;
+    int MatId;
+    for(int j=0; j<ny; j++){
+        for(int i=0; i<nx; i++){
+            Nodes[0]= i + (ny+1)*j;
+            Nodes[1]= i + 1 + (ny+1)*j;
+            Nodes[2]= i + 1 + (ny+1)*(j+1) ;
+            Nodes[3]= i + (ny+1)*(j+1);
+            index = i + j*nx;
+            MatId=1;
+            GeoElement *gel = new GeoElementTemplate<GeomQuad>(Nodes,MatId,gmesh,index);
+            gmesh->SetElement(index, gel);
+        }
+    }
+    //Boundary Conditions
+    
+    int bcL = -1;
+    int bcT = -2;
+    int bcR = -3;
+    int bcB = -4;
 
+ 
+    for(int iel=0; iel<NumElements; iel++){
+        GeoElement *gel = gmesh->Element(iel);
+        int nnodes= gel->NNodes();
+        for(int nNod=0; nNod<nnodes-1;nNod++){
+            int nodindex1=gel->NodeIndex(nNod);
+            int nodeindex2=gel->NodeIndex(nNod+1);
+            int nodeindex3=gel->NodeIndex(3);
+            double node1Cordx =  gmesh->Node(nodindex1).Coord(0);
+            double node2Cordx =  gmesh->Node(nodeindex2).Coord(0);
+            double node3Cordx =  gmesh->Node(nodeindex3).Coord(0);
+            double node1Cordy =  gmesh->Node(nodindex1).Coord(1);
+            double node2Cordy =  gmesh->Node(nodeindex2).Coord(1);
+            
+            
+            //Left Boundary Condition
+            if(nNod==2){
+            if(node2Cordx==0 && node3Cordx==0){
+                Nodes.resize(2);
+                Nodes[0]=gel->NodeIndex(nNod+1);
+                Nodes[1]=gel->NodeIndex(0);
+                MatId=bcL;
+                index = gmesh->NumElements();
+                gmesh->SetNumElements(index+1);
+                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
+                gmesh->SetElement(index, gel);
+            }
+            }
+            
+            //Top Boundary Condition
+            if(node1Cordy==0 && node2Cordy==0){
+                Nodes.resize(2);
+                Nodes[0]=gel->NodeIndex(nNod);
+                Nodes[1]=gel->NodeIndex(nNod+1);
+                MatId=bcT;
+                index = gmesh->NumElements();
+                gmesh->SetNumElements(index+1);
+                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
+                gmesh->SetElement(index, gel);
+                
+            }
+
+            //Right Boundary Condition
+            if(node1Cordx==lx && node2Cordx==lx){
+                
+                Nodes.resize(2);
+                Nodes[0]=gel->NodeIndex(nNod);
+                Nodes[1]=gel->NodeIndex(nNod+1);
+                MatId=bcR;
+                index = gmesh->NumElements();
+                gmesh->SetNumElements(index+1);
+                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
+                gmesh->SetElement(index, gel);
+            }
+            
+            
+            //Buttom Boundary Condition
+            if(node1Cordy==ly && node2Cordy==ly){
+                
+                Nodes.resize(2);
+                Nodes[0]=gel->NodeIndex(nNod);
+                Nodes[1]=gel->NodeIndex(nNod+1);
+                MatId=bcB;
+                index = gmesh->NumElements();
+                gmesh->SetNumElements(index+1);
+                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
+                gmesh->SetElement(index, gel);
+            }
+            
+            
+            
+        }
+    }
+    
+    
+    
+    
+    return gmesh;
+    
+}
 void TestGlobalMatrix(){
     //Creating the geometric mesh
     GeoMesh *gmesh = new GeoMesh;
@@ -128,12 +372,31 @@ void TestGlobalMatrix(){
     CompElement * cel2 = cmesh->GetElement(1);
     cel2->SetStatement(material);
     
-    Assemble Assem(cmesh);
-    std::cout<<"\n"<<"Num Eq: ";
-    std::cout<<Assem.NEquations();
-    Matrix globmat;
-    Matrix rhs;
-    Assem.Compute(globmat, rhs);
+ 
+    Analysis an(cmesh);
+    an.RunSimulation();
+   
+    PostProcess *solpos = new PostProcessTemplate<Poisson>(&an);
+   
+    
+    solpos->AppendVariable("Sol");
+    //  solpos->AppendVariable("DSol");
+//    solpos->AppendVariable("Sol_exact");
+//    solpos->AppendVariable("Force");
+    
+    an.PostProcessSolution("SolutionPost.vtk", *solpos);
+    
+    
+ 
+    
+//    std::cout<<"\n"<<"Num Eq: ";
+//    std::cout<<Assem.NEquations();
+//    std::cout<<"\n";
+//    Matrix globmat;
+//    Matrix rhs;
+//    Assem.Compute(globmat, rhs);
+//    globmat.PrintM();
+//    rhs.PrintM();
     
 //    CompElement * cel = cmesh->GetElement(0);
 //    cel->SetStatement(material);
@@ -147,19 +410,6 @@ void TestGlobalMatrix(){
 }
 
 
-void FoFunc(const VecDouble &x, VecDouble &f){
-    f.resize(2);
-    
-    double xP = x[0];
-    double yP = x[1];
-  
-    
-    double fx =  xP;
-    double fy =  yP;
-    
-    f[0] = fx;
-    f[1] = fy;
-}
 
 
 void OneElementMatrix(){
@@ -259,7 +509,7 @@ void AutoBuildTest(){
         
     }
     
-    cmesh.SetDefaultOrder(0);
+    cmesh.SetDefaultOrder(1);
     
     
     cmesh.AutoBuild();

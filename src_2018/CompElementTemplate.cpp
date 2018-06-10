@@ -88,7 +88,28 @@ void  CompElementTemplate<Shape>::ShapeFunctions(const VecDouble &intpoint, VecD
 }
 template<class Shape>
 void CompElementTemplate<Shape>::GetMultiplyingCoeficients(VecDouble &coefs) const{
-
+    
+    CompMesh *cmesh = this->GetCompMesh();
+    int neq = cmesh->Solution().size();
+    VecInt iGlob;
+    coefs.resize(0);
+    
+    int ndofel = NDOF();
+    int indexdof = 0;
+    for (int idof =0; idof<ndofel; idof++) {
+        int idcon = dofindexes[idof];
+        DOF dof = cmesh->GetDOF(idcon);
+        int nshape = dof.GetNShape();
+        int nstat = dof.GetNState();
+        for(int i=0; i<nshape*nstat; i++) {
+            iGlob.resize(indexdof+1);
+            coefs.resize(indexdof+1);
+            iGlob[indexdof] = dof.GetFirstEquation()+i;
+            coefs[indexdof] = cmesh->Solution()[iGlob[indexdof]];
+            indexdof++;
+        }
+    }
+    
 }
 
 template<class Shape>
@@ -118,10 +139,12 @@ int CompElementTemplate<Shape>::NShapeFunctions(int doflocindex) const{
 /// uses the Shape template class to compute the number of shape functions
 template<class Shape>
 int CompElementTemplate<Shape>::ComputeNShapeFunctions(int doflocindex, int order){
-    dofindexes.resize(doflocindex+1);
-    dofindexes[doflocindex]=doflocindex;
+//    dofindexes.resize(doflocindex+1);
+//    dofindexes[doflocindex]=doflocindex;
     return Shape::NShapeFunctions(doflocindex,order);
 }
+
+
 
 
 template class CompElementTemplate<Shape1d>;

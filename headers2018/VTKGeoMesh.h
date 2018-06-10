@@ -9,7 +9,7 @@
 #define VTKGeoMesh_h
 
 #include <string>
-
+#include "PostProcess.h"
 class GeoMesh;
 class CompMesh;
 
@@ -21,6 +21,9 @@ class VTKGeoMesh
 
     /// Generate an output file for the solution and its gradient
     static void PrintCMeshVTK(CompMesh *cmesh, int dim, const std::string &filename);
+    
+    /// Generate an output file for the solution and its gradient
+    static void PrintSolVTK(CompMesh *cmesh, PostProcess &defPostProc, const std::string &filename);
 };
 
 #endif /* VTKGeoMesh_h */

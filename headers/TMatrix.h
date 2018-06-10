@@ -78,6 +78,27 @@ public:
       out << std::endl;
     }
   }
+    
+    void PrintM(std::ostream &out = std::cout)
+    {
+           std::cout<<"{";
+        for (int irow=0;irow<Rows(); irow++) {
+            std::cout<<"{";
+            //out << "Linha " << irow << " : ";
+            for (int icol=0;icol<Cols(); icol++) {
+                out<<GetVal(irow, icol) << " ";
+                if(icol<Cols()-1){
+                std::cout<<",";
+                };
+            }
+            std::cout<<"}";
+            if(irow<Rows()-1){
+                std::cout<<",";
+            };
+            out << std::endl;
+        }
+               std::cout<<"}";
+    }
   
   //Imprime a matriz
   void Print(const std::string &txt, std::ostream &out = std::cout)

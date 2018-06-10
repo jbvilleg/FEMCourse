@@ -11,6 +11,7 @@
 #include "CompMesh.h"
 #include "CompElement.h"
 #include "Analysis.h"
+#include "VTKGeoMesh.h"
 
 Analysis::Analysis(): cmesh(0), Solution(), GlobalSystem(), RightHandSide(){
     
@@ -60,6 +61,7 @@ void Analysis::RunSimulation(){
     K.Solve_LU(F);
     Solution=F;
     
+    
     std::vector<double> lsol(Solution.Rows(),0.);
     for (int is=0; is<Solution.Rows(); is++) {
         lsol[is]=Solution(is,0);
@@ -69,6 +71,6 @@ void Analysis::RunSimulation(){
 }
 
 void Analysis::PostProcessSolution(const std::string &filename, PostProcess &defPostProc) const{
-    
+     VTKGeoMesh::PrintSolVTK(cmesh,defPostProc, filename);
     
 }

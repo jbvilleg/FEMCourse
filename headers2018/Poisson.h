@@ -21,9 +21,11 @@ class Poisson : public MathStatement
     // Force funtion related to Poisson math statement
     std::function<void(const VecDouble &co, VecDouble &result)> forceFunction;
     
+    std::function<void(const VecDouble &loc, VecDouble &result, Matrix &deriv)> SolutionExact;
+    
 public:
     
-    enum PostProcVar {ENone, ESol, EDSol, EFlux, EForce};
+    enum PostProcVar {ENone, ESol, EDSol, EFlux, EForce, ESolExact, EDSolExact};
     
     // Default constructor of Poisson
     Poisson();
@@ -31,24 +33,23 @@ public:
     // Constructor of Poisson
     Poisson(int materialid, Matrix &perm);
     
-    // Constructor of Poisson
-    Poisson(Matrix &perm);
-    
     // Copy constructor of Poisson
     Poisson(const Poisson &copy);
     
     // Operator of copy
     Poisson &operator=(const Poisson &copy);
     
+    Poisson(Matrix &perm);
+    
     // Method for creating a copy of the element
     virtual Poisson *Clone() const;
-
+    
     // Destructor of Poisson
     virtual ~Poisson();
     
     // Return the permeability matrix
     Matrix GetPermeability() const;
-
+    
     // Set the permeability matrix
     void SetPermeability(const Matrix &perm);
     
@@ -64,18 +65,37 @@ public:
         forceFunction = f;
     }
     
+    // Set the exact solution related to Poisson math statement
+    void SetExactSolution(const std::function<void(const VecDouble &loc, VecDouble &result, Matrix &deriv)> &Exact)
+    {
+        SolutionExact = Exact;
+    }
+    
+    // returns the integrable dimension of the material
+    int Dimension() const {return 2;}
+    
+    virtual int NEvalErrors() const;
+    
     // Return the number of state variables
     virtual int NState() const;
     
+    virtual int VariableIndex(const PostProcVar var) const;
+    
+    // Return the variable index associated with the name
+    virtual PostProcVar VariableIndex(const std::string &name);
+    
+    // Return the number of variables associated with the variable indexed by var. Param var Index variable into the solution, is obtained by calling VariableIndex
+    virtual int NSolutionVariables(const PostProcVar var);
+    
+    
     // Method to implement integral over element's volume
-    virtual void Contribute(IntPointData &integrationpointdata,double weight, Matrix &EK, Matrix &EF) const;
+    virtual void Contribute(IntPointData &integrationpointdata, double weight , Matrix &EK, Matrix &EF) const;
     
-    // Method to compute the contribution to the error norm
-    virtual void ContributeError(IntPointData &integrationpointdata, std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact);
-    
+    // Method to implement error over element's volume
+    virtual void ContributeError(IntPointData &integrationpointdata, VecDouble &u_exact, Matrix &du_exact, VecDouble &errors) const;
     
     // Prepare and print post processing data
-    virtual std::vector<double> PostProcess(const IntPointData &integrationpointdata, const PostProcVar var) const;
-
+    virtual std::vector<double> PostProcessSolution(const IntPointData &integrationpointdata, const int var) const;
+    
 };
 #endif /* Poisson_h */

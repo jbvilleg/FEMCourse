@@ -102,11 +102,9 @@ public:
     // Compute shape functions set at point x
     virtual void ShapeFunctions(const VecDouble &intpoint, VecDouble &phi, Matrix &dphi) const = 0;
     
-    // Compute the solution and its gradient at a parametric point
+       // Compute the solution and its gradient at a parametric point
     // for dsol the row indicates the direction, the column indicates the state variable
-    virtual void Solution(const VecDouble &intpoint, VecDouble &sol, TMatrix &dsol) const{
-        
-    }
+    virtual void Solution(VecDouble &intpoint, int var, VecDouble &sol, TMatrix &dsol) const;
 //
     /// Compute the error of the finite element approximation
     double ComputeError(std::function<void(const VecDouble &co, VecDouble &sol, Matrix &dsol)> &exact,  VecDouble &errors);
@@ -131,6 +129,9 @@ public:
     
     // Use the Shape template class to compute the number of shape functions
     virtual int ComputeNShapeFunctions(int doflocindex, int order) = 0;
+    
+    // Get Multiplying Coeficients
+    virtual void GetMultiplyingCoeficients(VecDouble &coefs) const = 0;
     
     // Return the dimension of the element
     virtual int Dimension() const = 0;

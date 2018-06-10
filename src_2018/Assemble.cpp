@@ -63,12 +63,13 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs){
     int neq = NEquations();
     int nel= cmesh->GetElementVec().size();
     globmat.Resize(neq, neq);
+    globmat.Zero();
+    globmat.Print();
     rhs.Resize(neq, 1);
     
     for (int el=0; el<nel; el++) {
         
         CompElement *cel=cmesh->GetElement(el);
-        
         Matrix EK,EF;
         cel->CalcStiff(EK, EF);
         EK.Print();
@@ -92,7 +93,7 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs){
                 globmat(IndexG[i],IndexG[j])+=EK(i,j);
             }
         }
-        
-        //globmat.Print();
+//
+    //    globmat.PrintM();
     }
 }

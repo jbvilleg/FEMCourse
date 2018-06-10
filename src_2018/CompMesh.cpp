@@ -141,12 +141,13 @@ void CompMesh::AutoBuild(){
     this->compelements.resize(NumEl);
    
     SetNumberElement(NumEl);
-    //SetNumberMath(NumEl);
+    SetNumberMath(NumEl);
     //Create computational elements
     for(int iel=0; iel <NumEl; iel++)
     {
     GeoElement *gel = GetGeoMesh()->Element(iel);
     CompElement *cel = gel->CreateCompEl(this, iel);
+      
         cel->SetNDOF(gel->NSides());
         SetNumberElement(iel+1);
         int numDofEl = gel->NSides();
@@ -163,7 +164,6 @@ void CompMesh::AutoBuild(){
         GeoElement *gel = GetGeoMesh()->Element(iel);
         int nsidesAn = gel->NSides();
         
-        
         for(int side=0; side<nsidesAn; side++){
             
             int dofAn = gel->GetReference()->GetDOFIndex(side);
@@ -174,25 +174,26 @@ void CompMesh::AutoBuild(){
                 DOF dof;
                 int order = this->GetDefaultOrder();
                 int nshape = gel->GetReference()->ComputeNShapeFunctions(side, order);
-                //importante
+//                //importante
                 if(nshape<0){
                     nshape=0;
                 }
                 //revisar iel o index do vecino?
                MathStatement *mat = this->GetMath(iel);
                int nstate = mat->NState();
-                dof.SetNShapeStateOrder(nshape,nstate,order);
-                
-                
-                this->SetDOF(ndof, dof);
+               dof.SetNShapeStateOrder(nshape,nstate,order);
+               this->SetDOF(ndof, dof);
                 GeoElementSide elementAn(gel,side);
                 GeoElementSide neigh = gel->Neighbour(side);
+                int sideNeig = neigh.Side();
+                elementAn.Element()->GetReference()->SetDOFIndex(side, ndof);
                 
-                 elementAn.Element()->GetReference()->SetDOFIndex(side, ndof);
-                while(elementAn != neigh){
-                    int sideNeig = neigh.Side();
+                 while(elementAn != neigh){
+                   
                     neigh.Element()->GetReference()->SetDOFIndex(sideNeig, ndof);
                     neigh = neigh.Neighbour();
+                    sideNeig = neigh.Side();
+                    
                 }
             }
         }
