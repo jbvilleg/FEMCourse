@@ -115,10 +115,11 @@ void CompElementTemplate<Shape>::GetMultiplyingCoeficients(VecDouble &coefs) con
 template<class Shape>
 int CompElementTemplate<Shape>::NShapeFunctions() const{
  
-    int ndof = NDOF();
+    int ndof = dofindexes.size();
     int nshape = 0;
     for (int ic=0; ic<ndof; ic++) {
-        nshape +=NShapeFunctions(ic);
+        int glob_index = dofindexes[ic];
+        nshape +=NShapeFunctions(glob_index);
     }
     return nshape;
 }

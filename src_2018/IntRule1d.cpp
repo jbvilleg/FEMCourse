@@ -57,8 +57,8 @@ void IntRule1d::SetOrder(int order){
     
     if (fOrder==2||fOrder==3) {
         
-        fPoints(0,0)=-0.57735026918962573; fWeights[0]=1;
-        fPoints(1,0)=0.57735026918962573; fWeights[1]=1;
+        fPoints(0,0)=-0.57735026918962573; fWeights[0]=1.0;
+        fPoints(1,0)=0.57735026918962573; fWeights[1]=1.0;
     }
     
     if (fOrder==4||fOrder==5) {
@@ -173,7 +173,7 @@ void IntRule1d::gauleg(const double x1, const double x2, VecDouble &x, VecDouble
     xm=0.5*(x2+x1);
     xl=0.5*(x2-x1);
     for (i=0;i<m;i++) {
-        z=cos(3.141592654*(i+0.75)/(n+0.5));
+        z=cos(M_PI*(i+0.75)/(n+0.5));
         do {
             p1=1.0;
             p2=0.0;

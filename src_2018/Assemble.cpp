@@ -64,7 +64,7 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs){
     int nel= cmesh->GetElementVec().size();
     globmat.Resize(neq, neq);
     globmat.Zero();
-    globmat.Print();
+//    globmat.Print();
     rhs.Resize(neq, 1);
     
     for (int el=0; el<nel; el++) {
@@ -72,8 +72,8 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs){
         CompElement *cel=cmesh->GetElement(el);
         Matrix EK,EF;
         cel->CalcStiff(EK, EF);
-        EK.Print();
-        VecInt IndexG(neq,0);
+//        EK.Print();
+        VecInt IndexG(EK.Rows(),0);
         int ndofElm = cel->NDOF();
         int indexdof = 0;
         for (int idof =0; idof<ndofElm; idof++) {
@@ -87,13 +87,20 @@ void Assemble::Compute(Matrix &globmat, Matrix &rhs){
             }
         }
         
+//        for (int i = 0; i < IndexG.size(); i++) {
+//            std::cout << "i = " << IndexG[i] << std::endl;
+//        }
+        
+//        EK.PrintM();
+        
         for (int i=0; i<EK.Rows(); i++) {
             rhs(IndexG[i],0)+=EF(i,0);
             for (int j=0; j<EK.Rows(); j++) {
                 globmat(IndexG[i],IndexG[j])+=EK(i,j);
             }
         }
-//
-    //    globmat.PrintM();
     }
+//    globmat.PrintM();
+//    rhs.PrintM();
+//    int aka = 0;
 }

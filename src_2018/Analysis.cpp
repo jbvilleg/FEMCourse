@@ -55,13 +55,11 @@ void Analysis::RunSimulation(){
 
     
     Assem.Compute(K, F);
-    K.Print();
     GlobalSystem = K;
     RightHandSide = F;
     K.Solve_LU(F);
     Solution=F;
-    
-    
+
     std::vector<double> lsol(Solution.Rows(),0.);
     for (int is=0; is<Solution.Rows(); is++) {
         lsol[is]=Solution(is,0);

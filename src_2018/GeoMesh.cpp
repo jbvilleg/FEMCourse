@@ -120,11 +120,11 @@ void GeoMesh::BuildConnectivity(){
                         }
                     }
                 }
-                std::cout<<"Elementos asociados al nodo: "<<i<<"\n";
-                Conects.Print();
+//                std::cout<<"Elementos asociados al nodo: "<<i<<"\n";
+//                Conects.Print();
                 VecConec[i]=Conects;
             }
-        VecConec[0].Print();
+//        VecConec[0].Print();
     
             // Conectividad por ramales por nodos
             Matrix NodoConect;

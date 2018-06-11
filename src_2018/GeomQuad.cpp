@@ -105,6 +105,19 @@ void GeomQuad::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &
         }
     }
     
+//    int dim = Dimension;
+//    VecDouble phi(4,0.0);
+//    Matrix dphi(4,dim,0.0);
+//    Shape(xi, phi, dphi);
+//    gradx.Resize(2,dim);
+//    gradx.Zero();
+//    int nSpace = NodeCo.Cols();
+//    for(int i=0; i< nSpace; i++){
+//        for(int j=0; j < 4;j++){
+//            gradx(i,0)+= NodeCo(i,j)*dphi(j,0);
+//            gradx(i,1)+= NodeCo(i,j)*dphi(j,0);
+//        }
+//    }
     
 }
 

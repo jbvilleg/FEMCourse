@@ -84,12 +84,12 @@ void L2Projection::Contribute(IntPointData &data, double weight, Matrix &EK, Mat
 
     
     for (int i = 0; i < nshape; i++) {
-       
         EF(i, 0) += weight * data.phi[i] * result[0] * BigNumber;
         for (int j = 0; j < nshape; j++) {
             EK(i, j) += weight * data.phi[i] * data.phi[j]*BigNumber;
          }
     }
+    
 }
 
 // Method to implement error over element's volume

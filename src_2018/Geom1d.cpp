@@ -49,41 +49,41 @@ Geom1d &Geom1d::operator=(const Geom1d &copy){
      phi[0] = (1.0-xi[0])/2.;
      phi[1] = (1.0+xi[0])/2.;
      dphi(0,0) = -0.5;
-     dphi(0,1) = 0.5;
+     dphi(1,0) = 0.5;
 }
 
 /// Computes the value of x for a given point in parameter space as a function of corner coordinates
  void Geom1d::X(const VecDouble &xi, Matrix &NodeCo, VecDouble &x){
-     double phi1 = (1- xi[0])/2;
-     double phi2 = (1+ xi[0])/2;
-     double map = NodeCo(0,0)*phi1 + NodeCo(1,0)*phi2;
-     x[0]= map;
+     
+     VecDouble phi(2);
+     phi[0] = (1- xi[0])/2;
+     phi[1] = (1+ xi[0])/2;
+     
+     int nSpace = NodeCo.Rows();
+     for(int i = 0; i < nSpace; i++) {
+         x[i] = 0.0;
+         for(int j = 0; j < 2; j++) {
+             x[i] += phi[j]*NodeCo.GetVal(i,j);
+         }
+     }
+     
 }
 
 /// Computes the value of x and gradx for a given point in parameter space
  void Geom1d::GradX(const VecDouble &xi, Matrix &NodeCo, VecDouble &x, Matrix &gradx){
      
-     //gradX linear
-     int nrow = Dimension;
-     int ncol = NodeCo.Cols();
-     
-     gradx.Resize(nrow,1);
+     int dim = Dimension;
+     VecDouble phi(2,0.0);
+     Matrix dphi(2,dim,0.0);
+     Shape(xi, phi, dphi);
+     gradx.Resize(2,dim);
      gradx.Zero();
-     
-     VecDouble phi(2,1);
-     Matrix dphi(2,2);
-     X(xi,NodeCo,x);
-     //funciones de forma
-     Shape(xi,phi,dphi);
-     for(int i = 0; i < ncol; i++)
-     {
-         for(int j = 0; j < nrow; j++)
-         {
-             gradx(j,0) += NodeCo(j,i)*dphi(0,i);
-             
+     int nSpace = NodeCo.Cols();
+     for(int i=0; i< nSpace; i++){
+         for(int j=0; j < 2;j++){
+             gradx(i,0)+= NodeCo(i,j)*dphi(j,0);
          }
      }
-
 }
 
 /// return the number of nodes of the template

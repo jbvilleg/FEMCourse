@@ -51,7 +51,8 @@ int main ()
   //  OneElementMatrix();
  //   AutoBuildTest();
   //   TestGlobalMatrix();
-   GeoMesh *gmesh = CreateGeoMesh(2,2,0,12,12);
+    int n = 64;
+   GeoMesh *gmesh = CreateGeoMesh(n,n,2,1,1);
    gmesh->BuildConnectivity();
 
     CompMesh *cmesh = new CompMesh(gmesh);
@@ -109,41 +110,40 @@ int main ()
     Analysis an(cmesh);
 
     an.RunSimulation();
-    
     PostProcess *solpos = new PostProcessTemplate<Poisson>(&an);
     
     
     solpos->AppendVariable("Sol");
-    //  solpos->AppendVariable("DSol");
-    //    solpos->AppendVariable("Sol_exact");
-    //    solpos->AppendVariable("Force");
+//      solpos->AppendVariable("DSol");
+//        solpos->AppendVariable("Sol_exact");
+//        solpos->AppendVariable("Force");
     
     an.PostProcessSolution("SolutionPost.vtk", *solpos);
-
+    
 
     
 //    VTKGeoMesh::PrintGMeshVTK(gmesh, "TESTVMALLA.vtk");
 //    gmesh->Print(std::cout);
-    std::cout<<"bingo";
+//    std::cout<<"bingo";
     
     
     return 0;
 };
 void solexact1(const VecDouble &co, VecDouble &result, Matrix &deriv)
 {
-    result[0] = 4;
+    result[0] = 0;
     result[1] = 0;
     result[2] = 0.;
 }
 void solexact2(const VecDouble &co, VecDouble &result, Matrix &deriv)
 {
-    result[0] = 20;
+    result[0] = 0;
     result[1] = 0;
     result[2] = 0.;
 }
 void solexact3(const VecDouble &co, VecDouble &result, Matrix &deriv)
 {
-    result[0] = 30;
+    result[0] = 0;
     result[1] = 0;
     result[2] = 0.;
 }
@@ -154,14 +154,15 @@ void FoFunc(const VecDouble &x, VecDouble &f){
     double yP = x[1];
     
     
-    double fx =  cos(xP);
+    double fx =  2*M_PI*M_PI*sin(M_PI*xP)*sin(M_PI*yP);
     double fy =  yP;
     
-    f[0] = 0;
+    f[0] = fx;
     f[1] = 0;
 }
 GeoMesh *CreateGeoMesh(int nx, int ny, int dim, double lx, double ly){
    
+    double eps = 1.0e-10; // closed point tolerance
     double hx=lx/nx;
     double hy=ly/ny;
     int NumNodes =(nx+1)*(ny+1);
@@ -195,10 +196,10 @@ GeoMesh *CreateGeoMesh(int nx, int ny, int dim, double lx, double ly){
     int MatId;
     for(int j=0; j<ny; j++){
         for(int i=0; i<nx; i++){
-            Nodes[0]= i + (ny+1)*j;
-            Nodes[1]= i + 1 + (ny+1)*j;
-            Nodes[2]= i + 1 + (ny+1)*(j+1) ;
-            Nodes[3]= i + (ny+1)*(j+1);
+            Nodes[0]= i + (nx+1)*(j);
+            Nodes[1]= i + 1 + (nx+1)*(j);
+            Nodes[2]= i + 1 + (nx+1)*(j+1) ;
+            Nodes[3]= i + (nx+1)*(j+1);
             index = i + j*nx;
             MatId=1;
             GeoElement *gel = new GeoElementTemplate<GeomQuad>(Nodes,MatId,gmesh,index);
@@ -211,83 +212,117 @@ GeoMesh *CreateGeoMesh(int nx, int ny, int dim, double lx, double ly){
     int bcT = -2;
     int bcR = -3;
     int bcB = -4;
-
- 
+    
+    VecDouble x_min_max(2,0);
+    VecDouble y_min_max(2,0);
+    x_min_max[0] = 0.0;
+    x_min_max[1] = lx;
+    y_min_max[0] = 0.0;
+    y_min_max[1] = ly;
+    
+    std::vector<std::pair<int, int > > set_bcL;
+    std::vector<std::pair<int, int > > set_bcT;
+    std::vector<std::pair<int, int > > set_bcR;
+    std::vector<std::pair<int, int > > set_bcB;
+    
+    std::pair<int, int > chunk;
+    
+    double coord_val;
     for(int iel=0; iel<NumElements; iel++){
         GeoElement *gel = gmesh->Element(iel);
         int nnodes= gel->NNodes();
-        for(int nNod=0; nNod<nnodes-1;nNod++){
-            int nodindex1=gel->NodeIndex(nNod);
-            int nodeindex2=gel->NodeIndex(nNod+1);
-            int nodeindex3=gel->NodeIndex(3);
-            double node1Cordx =  gmesh->Node(nodindex1).Coord(0);
-            double node2Cordx =  gmesh->Node(nodeindex2).Coord(0);
-            double node3Cordx =  gmesh->Node(nodeindex3).Coord(0);
-            double node1Cordy =  gmesh->Node(nodindex1).Coord(1);
-            double node2Cordy =  gmesh->Node(nodeindex2).Coord(1);
+        
+        for (int i_node = 0; i_node < nnodes ; i_node++) {
             
+            int glob_n_index = gel->NodeIndex(i_node);
+            coord_val = gmesh->Node(glob_n_index).Coord(0);
             
-            //Left Boundary Condition
-            if(nNod==2){
-            if(node2Cordx==0 && node3Cordx==0){
-                Nodes.resize(2);
-                Nodes[0]=gel->NodeIndex(nNod+1);
-                Nodes[1]=gel->NodeIndex(0);
-                MatId=bcL;
-                index = gmesh->NumElements();
-                gmesh->SetNumElements(index+1);
-                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
-                gmesh->SetElement(index, gel);
-            }
+            if (fabs(x_min_max[0] - coord_val) < eps) {
+                chunk.first = gel->GetIndex();
+                chunk.second = glob_n_index;
+                set_bcL.push_back(chunk);
             }
             
-            //Top Boundary Condition
-            if(node1Cordy==0 && node2Cordy==0){
-                Nodes.resize(2);
-                Nodes[0]=gel->NodeIndex(nNod);
-                Nodes[1]=gel->NodeIndex(nNod+1);
-                MatId=bcT;
-                index = gmesh->NumElements();
-                gmesh->SetNumElements(index+1);
-                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
-                gmesh->SetElement(index, gel);
-                
+            if (fabs(x_min_max[1] - coord_val) < eps) {
+                chunk.first = gel->GetIndex();
+                chunk.second = glob_n_index;
+                set_bcR.push_back(chunk);
             }
 
-            //Right Boundary Condition
-            if(node1Cordx==lx && node2Cordx==lx){
+            if (dim == 2) {
+                coord_val = gmesh->Node(gel->NodeIndex(i_node)).Coord(1);
                 
-                Nodes.resize(2);
-                Nodes[0]=gel->NodeIndex(nNod);
-                Nodes[1]=gel->NodeIndex(nNod+1);
-                MatId=bcR;
-                index = gmesh->NumElements();
-                gmesh->SetNumElements(index+1);
-                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
-                gmesh->SetElement(index, gel);
-            }
-            
-            
-            //Buttom Boundary Condition
-            if(node1Cordy==ly && node2Cordy==ly){
+                if (fabs(y_min_max[0] - coord_val) < eps) {
+                    chunk.first = gel->GetIndex();
+                    chunk.second = glob_n_index;
+                    set_bcB.push_back(chunk);
+                }
                 
-                Nodes.resize(2);
-                Nodes[0]=gel->NodeIndex(nNod);
-                Nodes[1]=gel->NodeIndex(nNod+1);
-                MatId=bcB;
-                index = gmesh->NumElements();
-                gmesh->SetNumElements(index+1);
-                GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,MatId,gmesh,index);
-                gmesh->SetElement(index, gel);
+                if (fabs(y_min_max[1] - coord_val) < eps) {
+                    chunk.first = gel->GetIndex();
+                    chunk.second = glob_n_index;
+                    set_bcT.push_back(chunk);
+                }
             }
-            
-            
+        }
+    }
+    
+//    return gmesh;
+    
+    Nodes.resize(2);
+    int max_gel_index;
+    
+    // Inserting Left elements
+    for (int ibc = 0; ibc < set_bcL.size() - 1; ibc++) {
+        if (set_bcL[ibc].first == set_bcL[ibc+1].first) {
+            Nodes[0]= set_bcL[ibc].second;
+            Nodes[1]= set_bcL[ibc+1].second;
+            max_gel_index = gmesh->NumElements();
+            gmesh->SetNumElements(max_gel_index+1);
+            GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,bcL,gmesh,max_gel_index);
+            gmesh->SetElement(max_gel_index, gel);
+
+        }
+    }
+    
+    // Inserting Top elements
+    for (int ibc = 0; ibc < set_bcT.size() - 1; ibc++) {
+        if (set_bcT[ibc].first == set_bcT[ibc+1].first) {
+            Nodes[0]= set_bcT[ibc].second;
+            Nodes[1]= set_bcT[ibc+1].second;
+            max_gel_index = gmesh->NumElements();
+            gmesh->SetNumElements(max_gel_index+1);
+            GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,bcT,gmesh,max_gel_index);
+            gmesh->SetElement(max_gel_index, gel);
             
         }
     }
     
+    // Inserting Right elements
+    for (int ibc = 0; ibc < set_bcR.size() - 1; ibc++) {
+        if (set_bcR[ibc].first == set_bcR[ibc+1].first) {
+            Nodes[0]= set_bcR[ibc].second;
+            Nodes[1]= set_bcR[ibc+1].second;
+            max_gel_index = gmesh->NumElements();
+            gmesh->SetNumElements(max_gel_index+1);
+            GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,bcR,gmesh,max_gel_index);
+            gmesh->SetElement(max_gel_index, gel);
+            
+        }
+    }
     
-    
+    // Inserting Bottom elements
+    for (int ibc = 0; ibc < set_bcB.size() - 1; ibc++) {
+        if (set_bcB[ibc].first == set_bcB[ibc+1].first) {
+            Nodes[0]= set_bcB[ibc].second;
+            Nodes[1]= set_bcB[ibc+1].second;
+            max_gel_index = gmesh->NumElements();
+            gmesh->SetNumElements(max_gel_index+1);
+            GeoElement *gel = new GeoElementTemplate<Geom1d>(Nodes,bcB,gmesh,max_gel_index);
+            gmesh->SetElement(max_gel_index, gel);
+            
+        }
+    }
     
     return gmesh;
     

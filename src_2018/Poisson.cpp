@@ -135,6 +135,7 @@ void Poisson::Contribute(IntPointData &data,double weight ,Matrix &EK, Matrix &E
    Matrix perm(dim, dim);
    perm = permeability;
 
+    
     for (int i = 0; i < nshape; i++) {
         dv[0] = dphi(0, i) * axes(0, 0) + dphi(1, i) * axes(1, 0);
         dv[1] = dphi(0, i) * axes(0, 1) + dphi(1, i) * axes(1, 1);

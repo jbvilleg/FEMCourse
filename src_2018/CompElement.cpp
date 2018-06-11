@@ -207,6 +207,12 @@ void CompElement::CalcStiff(Matrix &ek, Matrix &ef) const{
     ek.Zero();
     ef.Zero();
     
+//    if(material->GetMatID() < 0){
+//        std::cout << "Id = " << material->GetMatID() << std::endl;
+//        std::cout << std::endl;
+//
+//    }
+    
     for (int intd_id = 0; intd_id < nintrulepoints; intd_id++) {
         intrule->Point(intd_id, data.ksi, data.weight);
         this->ComputeRequiredData(data, data.ksi);
@@ -214,6 +220,12 @@ void CompElement::CalcStiff(Matrix &ek, Matrix &ef) const{
         weight *=fabs(data.detjac);
         material->Contribute(data, weight, ek, ef);
     }
+//    if(material->GetMatID() < 0){
+//        std::cout << "Id = " << material->GetMatID() << std::endl;
+//        ek.PrintM();
+//        std::cout << std::endl;
+//        
+//    }
 
 }
 void CompElement::Solution(VecDouble &intpoint, int var, VecDouble &sol, TMatrix &dsol) const{

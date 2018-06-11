@@ -151,7 +151,6 @@ void CompMesh::AutoBuild(){
         cel->SetNDOF(gel->NSides());
         SetNumberElement(iel+1);
         int numDofEl = gel->NSides();
-        //Inicializa los grados de libertad OJO REVISAR
         for(int i=0; i<numDofEl;i++){
             cel->SetDOFIndex(i, -1);
         }
